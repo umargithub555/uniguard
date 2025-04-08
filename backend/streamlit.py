@@ -20,7 +20,14 @@ def login_page():
     password = st.text_input("Password", type="password")
     
     if st.button("Login"):
+        # Add validation before sending request
+        if not email or not password:
+            st.error("Please enter both email and password")
+            return
+            
         try:
+            print(f"Sending login request with email: {email}")  # Debug print
+            
             response = requests.post(
                 f"{API_URL}/auth/login",
                 data={"username": email, "password": password}
@@ -36,9 +43,11 @@ def login_page():
                 st.rerun()
             else:
                 st.error("Login failed. Please check your credentials.")
+                print(f"Login failed with status code: {response.status_code}")
+                print(f"Response: {response.text}")
         except Exception as e:
             st.error(f"Error connecting to server: {str(e)}")
-    
+            
     st.markdown("---")
     if st.button("Register Instead"):
         st.session_state.page = "register"

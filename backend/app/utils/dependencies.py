@@ -4,7 +4,7 @@ from ..database import get_db
 from ..models import User
 from .security import verify_token
 
-async def get_current_user(email: str = Depends(verify_token), db: Session = Depends(get_db)):
+async def get_current_user(db: Session = Depends(get_db), email: str = Depends(verify_token)):
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(
