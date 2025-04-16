@@ -7,7 +7,7 @@ from paddleocr import PaddleOCR
 
 def detect_license_plates(
     video_path,
-    model_path="../license_plate_detector.pt",
+    model_path="./license_plate_detector.pt",
     confidence_threshold=0.45
 ):
     """

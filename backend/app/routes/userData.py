@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import numpy as np
 import io
 import base64
@@ -9,7 +9,7 @@ from ..models import User, UserData
 from ..schemas import UserDataCreate, UserDataResponse
 from ..utils.dependencies import get_current_user
 from ..utils.face_processing import encode_face_image
-
+from pydantic import BaseModel
 
 
 
@@ -74,6 +74,16 @@ async def create_UserData(
 
 
 
+class UserDataUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    cnic: Optional[str] = None
+    registration_number: Optional[str] = None
+    face_embedding: Optional[str] = None
+    plate_number: Optional[str] = None
+    model: Optional[str] = None
+    color: Optional[str] = None
 
 @router.get("/", response_model=List[UserDataResponse])
 async def get_users(
@@ -118,32 +128,27 @@ async def get_user_by_cnic(
 
 @router.put("/{id}", response_model=UserDataResponse)
 async def update_user_by_id(
-    id: int, 
-    userData: UserDataCreate, 
-    current_user: User = Depends(get_current_user), 
+    id: int,
+    userData: UserDataUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Ensure only admin can update data
     if current_user.role.name != "admin":
         raise HTTPException(status_code=403, detail="Only admin can update user data")
 
     user_data = db.query(UserData).filter(UserData.id == id).first()
-    
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Update the fields
-    user_data.name = userData.name
-    user_data.email = userData.email
-    user_data.phone_number = userData.phone_number
-    user_data.registration_number = userData.registration_number
-    user_data.face_embedding = userData.face_embedding
+    # Update only fields that are provided
+    update_data = userData.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user_data, key, value)
 
     db.commit()
     db.refresh(user_data)
-    
-    return user_data
 
+    return user_data
 
 
 
