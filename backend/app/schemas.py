@@ -83,3 +83,7 @@ class UserDataResponse(UserDataBase):
 
     class Config:
         from_attributes = True
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
