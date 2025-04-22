@@ -68,10 +68,11 @@ class UserDataBase(BaseModel):
     phone_number : str
     cnic:str
     registration_number:str
-    face_embedding:str
+    password: Optional[str]
     plate_number:str
     model:Optional[str] = None
     color:Optional[str] = None
+    face_embedding:str
 
 
 class UserDataCreate(UserDataBase):
@@ -79,6 +80,8 @@ class UserDataCreate(UserDataBase):
 
 class UserDataResponse(UserDataBase):
     id:int
+    
+    password: Optional[str] = None 
 
 
     class Config:

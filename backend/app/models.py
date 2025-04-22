@@ -1,9 +1,11 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime, BigInteger
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime, BigInteger, Text
 from sqlalchemy.orm import relationship
 from .database import Base
 import enum
 from datetime import datetime
+from passlib.context import CryptContext
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class Role(enum.Enum):
     admin = "admin"
     user = "user"
@@ -40,11 +42,12 @@ class UserData(Base):
     phone_number = Column(String,nullable=False,unique=True)
     cnic = Column(String,nullable=False,unique=True)
     registration_number = Column(String, nullable=False)
-    face_embedding = Column(String, nullable=False)
+    password = Column(String) 
     plate_number = Column(String, unique=True, nullable=False)
     model = Column(String, nullable=True)
     color = Column(String, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    face_embedding = Column(String, nullable=False)
 
     user = relationship("User")
     logs = relationship("AccessLog", back_populates="vehicle")

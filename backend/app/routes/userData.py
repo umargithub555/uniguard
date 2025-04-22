@@ -10,12 +10,18 @@ from ..schemas import UserDataCreate, UserDataResponse
 from ..utils.dependencies import get_current_user
 from ..utils.face_processing import encode_face_image
 from pydantic import BaseModel
-
-
+from typing import List, Optional
+from passlib.context import CryptContext
 
 router = APIRouter()
 
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
+
+# Create new UserData entry (Admin only)
 @router.post("/", response_model=UserDataResponse)
 async def create_UserData(
     name: str = Form(...),
@@ -23,43 +29,44 @@ async def create_UserData(
     phone_number: str = Form(...),
     cnic: str = Form(...),
     registration_number: str = Form(...),
+    password: str = Form(...),
     face_image: UploadFile = File(...),
-    plate_number:str =  Form(...),
-    model:str = Form(None),
-    color:str = Form(None),
+    plate_number: str = Form(...),
+    model: str = Form(None),
+    color: str = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     # Ensure only admin can create UserData
-    print(f"Current User: ID={current_user.id}, Name={current_user.name}, Role={current_user.role}")
-
     if current_user.role.name != "admin":
         raise HTTPException(status_code=403, detail="Only admin can add user data")
 
     # Check if CNIC already exists
-    check_Cnic = db.query(UserData).filter(UserData.cnic == cnic).first()
-    if check_Cnic:
+    existing = db.query(UserData).filter(UserData.cnic == cnic).first()
+    if existing:
         raise HTTPException(status_code=400, detail="User with this CNIC already registered")
-    
-    # Ensure uploaded file is an image
+
+    # Validate image
     if not face_image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file is not an image")
-    
-    # Read and process the image
+
     image_data = await face_image.read()
     face_embedding = encode_face_image(image_data)
-    
     if not face_embedding:
         raise HTTPException(status_code=400, detail="No face detected in the image")
-    
-    # Create new UserData entry
+
+    # Hash password
+    hashed_password = hash_password(password)
+
+    # Create user data entry
     new_userData = UserData(
         name=name,
         email=email,
         phone_number=phone_number,
         cnic=cnic,
         registration_number=registration_number,
-        face_embedding=face_embedding,  # Store actual embedding
+        password=hashed_password,
+        face_embedding=face_embedding,
         plate_number=plate_number,
         model=model,
         color=color,
@@ -73,17 +80,17 @@ async def create_UserData(
     return new_userData
 
 
-
 class UserDataUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
     cnic: Optional[str] = None
     registration_number: Optional[str] = None
-    face_embedding: Optional[str] = None
+    password:Optional[str]=None
     plate_number: Optional[str] = None
     model: Optional[str] = None
     color: Optional[str] = None
+    face_embedding: Optional[str] = None
 
 @router.get("/", response_model=List[UserDataResponse])
 async def get_users(
@@ -102,9 +109,6 @@ async def get_users(
     user_data = query.all()
     
     return user_data  # Returns [] if no users are found (which is expected behavior)
-
-
-
 
 
 
