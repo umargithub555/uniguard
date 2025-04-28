@@ -83,3 +83,20 @@ class UserDataResponse(UserDataBase):
 
     class Config:
         from_attributes = True
+
+
+
+
+class UserSearch(BaseModel):
+    cnic:str
+
+
+class NormalUserResponse(BaseModel):
+    name:str
+    phone_number:str
+    registration_number:str
+    plate_number:str
+    color:str
+    email:EmailStr
+    cnic:str
+    model:str

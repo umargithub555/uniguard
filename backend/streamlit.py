@@ -384,7 +384,7 @@ def show_dashboard():
             
             # Get vehicle and user details for each log
             for log in recent_logs[:10]:  # Show only last 10
-                vehicle_response = requests.get(f"{API_URL}/userdata/{log['vehicle_id']}", headers=headers)
+                vehicle_response = requests.get(f"{API_URL}/vehicles/{log['vehicle_id']}", headers=headers)
                 vehicle = vehicle_response.json() if vehicle_response.status_code == 200 else {"plate_number": "Unknown", "model": "Unknown"}
                 
                 st.write(f"**{log['status']}** - {datetime.fromisoformat(log['entry_time'].replace('Z', '+00:00')).strftime('%Y-%m-%d %H:%M:%S')}")
@@ -631,6 +631,28 @@ def process_gate_video():
                             else:
                                 st.error("❌ ACCESS DENIED")
                                 st.write("No matching vehicle found in the database.")
+
+                                user_id = response_json.get("user_id")
+                                vehicle_id = response_json.get("vehicle_id")
+                                status = "Granted" if response_json.get("access_granted") else "Denied"
+                                if user_id or vehicle_id == 0:
+                                    st.warning("NO user or vehicle id")
+                                if status != "Granted" or status != "Denied":
+                                    st.warning("No status")
+
+                                if user_id and vehicle_id:
+                                    log_response = requests.post(
+                                        f"{API_URL}/access/",
+                                        json={
+                                            "user_id": user_id,
+                                            "vehicle_id": vehicle_id,
+                                            "status": status
+                                        },
+                                        headers=headers
+                                    )
+                                    
+                                    if log_response.status_code != 200:
+                                        st.warning("Failed to record access attempt in logs")
                                 
                         else:
                             error_detail = response_json.get("detail", "Unknown error")
