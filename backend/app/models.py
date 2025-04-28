@@ -3,7 +3,13 @@ from sqlalchemy.orm import relationship
 from .database import Base
 import enum
 from datetime import datetime
+<<<<<<< HEAD
 from passlib.context import CryptContext
+=======
+from .schemas import AccessStatusEnum
+
+
+>>>>>>> 6f608e5c4446d738f31a016d411b41bfe54ed80c
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class Role(enum.Enum):
@@ -57,10 +63,10 @@ class AccessLog(Base):
     __tablename__ = "access_logs"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    vehicle_id = Column(Integer, ForeignKey("userdata.id"))  # Rename from userData_id for consistency
+    vehicle_id = Column(Integer, ForeignKey("userdata.id"))
     entry_time = Column(DateTime, default=datetime.utcnow)
     exit_time = Column(DateTime, nullable=True)
-    status = Column(String, default="Pending")
+    status = Column(Enum(AccessStatusEnum), default=AccessStatusEnum.pending)  # Fix: Use Enum instead of String
 
     user = relationship("User", back_populates="logs")
-    vehicle = relationship("UserData", back_populates="logs")  # Update relationship name
+    vehicle = relationship("UserData", back_populates="logs")

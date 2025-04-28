@@ -12,19 +12,32 @@ router = APIRouter()
 @router.post("/", response_model=AccessLogResponse)
 def create_access_log(
     access_log: AccessLogCreate,
-    current_user: User = Depends(get_admin_user),
+    # current_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    # Verify vehicle exists (using UserData table)
-    vehicle = db.query(UserData).filter(UserData.id == access_log.vehicle_id).first()
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
-    
     # Verify user exists
     user = db.query(User).filter(User.id == access_log.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Verify vehicle exists and belongs to the specified user
+    vehicle = db.query(UserData).filter(
+        UserData.id == access_log.vehicle_id,
+        UserData.user_id == access_log.user_id
+    ).first()
+    
+    if not vehicle:
+        # Check if vehicle exists at all
+        any_vehicle = db.query(UserData).filter(UserData.id == access_log.vehicle_id).first()
+        if not any_vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        else:
+            raise HTTPException(status_code=403, detail="Vehicle does not belong to the specified user")
+    
+    print(access_log.status)
+    print(access_log.user_id)
+    print(access_log.vehicle_id)
+
     new_log = AccessLog(
         user_id=access_log.user_id,
         vehicle_id=access_log.vehicle_id,
@@ -36,6 +49,10 @@ def create_access_log(
     db.refresh(new_log)
     return new_log
 
+
+
+
+
 @router.get("/", response_model=List[AccessLogResponse])
 def read_access_logs(
     skip: int = 0,
@@ -43,16 +60,19 @@ def read_access_logs(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if current_user.role.name == "admin":
+    if current_user.role.name == 'admin':  # Use the Role enum directly
         logs = db.query(AccessLog).offset(skip).limit(limit).all()
     else:
         logs = db.query(AccessLog).filter(AccessLog.user_id == current_user.id).offset(skip).limit(limit).all()
     return logs
 
-@router.patch("/{log_id}/exit")
+
+
+
+@router.patch("/{log_id}/exit", response_model=AccessLogResponse)
 def record_exit(
     log_id: int,
-    current_user: User = Depends(get_admin_user),  # Only admins can update exit times
+    current_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     log = db.query(AccessLog).filter(AccessLog.id == log_id).first()
@@ -65,4 +85,4 @@ def record_exit(
     log.exit_time = datetime.utcnow()
     db.commit()
     db.refresh(log)
-    return {"detail": "Exit time recorded successfully"}
+    return log  # Return the updated log with exit time

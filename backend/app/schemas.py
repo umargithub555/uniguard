@@ -87,6 +87,25 @@ class UserDataResponse(UserDataBase):
     class Config:
         from_attributes = True
 
+<<<<<<< HEAD
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+=======
+
+
+
+class UserSearch(BaseModel):
+    cnic:str
+
+
+class NormalUserResponse(BaseModel):
+    name:str
+    phone_number:str
+    registration_number:str
+    plate_number:str
+    color:str
+    email:EmailStr
+    cnic:str
+    model:str
+>>>>>>> 6f608e5c4446d738f31a016d411b41bfe54ed80c
