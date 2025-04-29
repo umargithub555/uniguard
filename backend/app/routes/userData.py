@@ -1,0 +1,168 @@
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from sqlalchemy.orm import Session
+from typing import List
+import numpy as np
+import io
+import base64
+from ..database import get_db
+from ..models import User, UserData
+from ..schemas import UserDataCreate, UserDataResponse
+from ..utils.dependencies import get_current_user
+from ..utils.face_processing import encode_face_image
+
+
+
+
+router = APIRouter()
+
+
+@router.post("/", response_model=UserDataResponse)
+async def create_UserData(
+    name: str = Form(...),
+    email: str = Form(...),
+    phone_number: str = Form(...),
+    cnic: str = Form(...),
+    registration_number: str = Form(...),
+    face_image: UploadFile = File(...),
+    plate_number:str =  Form(...),
+    model:str = Form(None),
+    color:str = Form(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # Ensure only admin can create UserData
+    print(f"Current User: ID={current_user.id}, Name={current_user.name}, Role={current_user.role}")
+
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can add user data")
+
+    # Check if CNIC already exists
+    check_Cnic = db.query(UserData).filter(UserData.cnic == cnic).first()
+    if check_Cnic:
+        raise HTTPException(status_code=400, detail="User with this CNIC already registered")
+    
+    # Ensure uploaded file is an image
+    if not face_image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Uploaded file is not an image")
+    
+    # Read and process the image
+    image_data = await face_image.read()
+    face_embedding = encode_face_image(image_data)
+    
+    if not face_embedding:
+        raise HTTPException(status_code=400, detail="No face detected in the image")
+    
+    # Create new UserData entry
+    new_userData = UserData(
+        name=name,
+        email=email,
+        phone_number=phone_number,
+        cnic=cnic,
+        registration_number=registration_number,
+        face_embedding=face_embedding,  # Store actual embedding
+        plate_number=plate_number,
+        model=model,
+        color=color,
+        user_id=current_user.id
+    )
+
+    db.add(new_userData)
+    db.commit()
+    db.refresh(new_userData)
+
+    return new_userData
+
+
+
+
+@router.get("/", response_model=List[UserDataResponse])
+async def get_users(
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    # Ensure only admin can access this data
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can access this data")
+
+    query = db.query(UserData)
+    
+    # if cnic:
+    #     query = query.filter(UserData.cnic == cnic)
+
+    user_data = query.all()
+    
+    return user_data  # Returns [] if no users are found (which is expected behavior)
+
+
+
+
+
+
+@router.get("/cnic/{cnic}", response_model=UserDataResponse)
+async def get_user_by_cnic(
+    cnic: str, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    # Ensure only admin can access this data
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can access this data")
+
+    user_data = db.query(UserData).filter(UserData.cnic == cnic).first()
+    
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user_data
+
+
+@router.put("/{id}", response_model=UserDataResponse)
+async def update_user_by_id(
+    id: int, 
+    userData: UserDataCreate, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    # Ensure only admin can update data
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can update user data")
+
+    user_data = db.query(UserData).filter(UserData.id == id).first()
+    
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update the fields
+    user_data.name = userData.name
+    user_data.email = userData.email
+    user_data.phone_number = userData.phone_number
+    user_data.registration_number = userData.registration_number
+    user_data.face_embedding = userData.face_embedding
+
+    db.commit()
+    db.refresh(user_data)
+    
+    return user_data
+
+
+
+
+@router.delete("/{id}")
+async def delete_user_by_id(
+    id: int, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
+    # Ensure only admin can delete data
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can delete user data")
+
+    user_data = db.query(UserData).filter(UserData.id == id).first()
+    
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db.delete(user_data)
+    db.commit()
+    
+    return {"message": "User data deleted successfully"}
