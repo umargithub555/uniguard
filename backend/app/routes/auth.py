@@ -23,6 +23,7 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+<<<<<<< HEAD
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
@@ -32,6 +33,46 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
         )
     token = create_jwt_token({"sub": user.email})
     return {"access_token": token, "token_type": "bearer", "user_id": user.id, "name": user.name, "role": user.role}
+=======
+    print(f"Attempting login with username: {form_data.username}")
+    user = db.query(User).filter(User.email == form_data.username).first()
+    
+    if not user:
+        print(f"User not found: {form_data.username}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        password_valid = verify_password(form_data.password, user.password_hash)
+        print(f"Password verification result for {user.email}: {password_valid}")
+        
+        if not password_valid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        token = create_jwt_token({"sub": user.email})
+        return {
+            "access_token": token, 
+            "token_type": "bearer", 
+            "user_id": user.id, 
+            "name": user.name, 
+            "role": user.role.value  # Make sure to convert Enum to string
+        }
+    except Exception as e:
+        print(f"Error during password verification: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication error",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+>>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 
 @router.get("/me", response_model=UserResponse)
 def get_user_me(current_user: User = Depends(get_current_user)):

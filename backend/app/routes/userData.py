@@ -101,12 +101,12 @@ async def get_users(
 @router.get("/cnic/{cnic}", response_model=UserDataResponse)
 async def get_user_by_cnic(
     cnic: str, 
-    current_user: User = Depends(get_current_user), 
+    # current_user: User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    # Ensure only admin can access this data
-    if current_user.role.name != "admin":
-        raise HTTPException(status_code=403, detail="Only admin can access this data")
+    # # Ensure only admin can access this data
+    # if current_user.role.name != "admin":
+    #     raise HTTPException(status_code=403, detail="Only admin can access this data")
 
     user_data = db.query(UserData).filter(UserData.cnic == cnic).first()
     

@@ -1,21 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from ..database import get_db
-from ..models import User
-from ..schemas import UserResponse
+from ..models import User,UserData
+from ..schemas import UserResponse,UserSearch,NormalUserResponse
 from ..utils.dependencies import get_current_user, get_admin_user
-from ..utils.face_processing import encode_face_image
+# from ..utils.face_processing import encode_face_image
 
 router = APIRouter()
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
-from sqlalchemy.orm import Session
-from typing import List
-from ..database import get_db
-from ..models import User
-from ..schemas import UserResponse
-from ..utils.dependencies import get_current_user, get_admin_user
 
 router = APIRouter()
 
@@ -48,6 +41,44 @@ def read_user(
         raise HTTPException(status_code=404, detail="User not found")
     
     return user
+
+
+@router.post("/get_user_data", response_model=NormalUserResponse)
+def get_user_detail(
+    user_search: UserSearch,
+    db: Session = Depends(get_db), 
+    # current_user: User = Depends(get_current_user)
+):
+    # if current_user.role.name != "admin" and current_user.role.name != "user":
+    #     raise HTTPException(status_code=403, detail="Not authorized to access this data")
+    
+    user = db.query(UserData).filter(UserData.cnic == user_search.cnic).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # @router.post("/face-embedding", status_code=status.HTTP_200_OK)
 # async def upload_face_embedding(

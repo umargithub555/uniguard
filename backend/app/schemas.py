@@ -21,6 +21,8 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
+
+
 # class VehicleBase(BaseModel):
 #     plate_number: str
 #     model: str
@@ -42,8 +44,8 @@ class AccessStatusEnum(str, Enum):
     denied = "Denied"
 
 class AccessLogBase(BaseModel):
-    user_id: int
-    vehicle_id: int
+    user_id: Optional[int] = None
+    vehicle_id: Optional[int] = None
     status: AccessStatusEnum = AccessStatusEnum.pending
 
 class AccessLogCreate(AccessLogBase):
@@ -81,3 +83,20 @@ class UserDataResponse(UserDataBase):
 
     class Config:
         from_attributes = True
+
+
+
+
+class UserSearch(BaseModel):
+    cnic:str
+
+
+class NormalUserResponse(BaseModel):
+    name:str
+    phone_number:str
+    registration_number:str
+    plate_number:str
+    color:str
+    email:EmailStr
+    cnic:str
+    model:str

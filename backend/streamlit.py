@@ -20,7 +20,14 @@ def login_page():
     password = st.text_input("Password", type="password")
     
     if st.button("Login"):
+        # Add validation before sending request
+        if not email or not password:
+            st.error("Please enter both email and password")
+            return
+            
         try:
+            print(f"Sending login request with email: {email}")  # Debug print
+            
             response = requests.post(
                 f"{API_URL}/auth/login",
                 data={"username": email, "password": password}
@@ -36,9 +43,11 @@ def login_page():
                 st.rerun()
             else:
                 st.error("Login failed. Please check your credentials.")
+                print(f"Login failed with status code: {response.status_code}")
+                print(f"Response: {response.text}")
         except Exception as e:
             st.error(f"Error connecting to server: {str(e)}")
-    
+            
     st.markdown("---")
     if st.button("Register Instead"):
         st.session_state.page = "register"
@@ -375,7 +384,7 @@ def show_dashboard():
             
             # Get vehicle and user details for each log
             for log in recent_logs[:10]:  # Show only last 10
-                vehicle_response = requests.get(f"{API_URL}/userdata/{log['vehicle_id']}", headers=headers)
+                vehicle_response = requests.get(f"{API_URL}/vehicles/{log['vehicle_id']}", headers=headers)
                 vehicle = vehicle_response.json() if vehicle_response.status_code == 200 else {"plate_number": "Unknown", "model": "Unknown"}
                 
                 st.write(f"**{log['status']}** - {datetime.fromisoformat(log['entry_time'].replace('Z', '+00:00')).strftime('%Y-%m-%d %H:%M:%S')}")
@@ -517,6 +526,191 @@ def show_dashboard():
 #                 except Exception as e:
 #                     st.error(f"Error connecting to server: {str(e)}")
 
+
+# /////////////////////////////////////////////////////////////////////////
+
+
+# 
+# def process_gate_video():
+#     st.header("Process Gate Access Video")
+    
+#     if "token" not in st.session_state:
+#         st.error("Please log in first")
+#         return
+        
+#     headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    
+#     st.write("Upload a video from the gate camera to process vehicle license plate recognition.")
+    
+#     # Upload main gate video
+#     uploaded_file = st.file_uploader("Upload Gate Video", type=["mp4", "avi", "mov"])
+    
+#     # Upload face video for recognition - make it required
+#     uploaded_face_video = st.file_uploader("Upload Face Video (Required)", type=["mp4", "avi", "mov"])
+    
+#     if uploaded_file is not None:
+#         # Save uploaded video to temp file for display
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+#             video_bytes = uploaded_file.getvalue()
+#             if not video_bytes:
+#                 st.error("The uploaded file is empty")
+#                 return
+                
+#             tmp_file.write(video_bytes)
+#             temp_path = tmp_file.name
+        
+#         try:
+#             # Display the uploaded video
+#             st.video(temp_path)
+            
+#             # Display face video if provided
+#             face_temp_path = None
+#             if uploaded_face_video is not None:
+#                 with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as face_tmp_file:
+#                     face_video_bytes = uploaded_face_video.getvalue()
+#                     face_tmp_file.write(face_video_bytes)
+#                     face_temp_path = face_tmp_file.name
+#                 st.write("Face Video:")
+#                 st.video(face_temp_path)
+            
+#             process_button = st.button("Process Videos for Access")
+            
+#             if process_button:
+#                 # Check if face video is missing
+#                 if uploaded_face_video is None:
+#                     st.error("Face video is required for access verification")
+#                     return
+                    
+#                 with st.spinner("Processing videos... This may take a moment."):
+#                     try:
+#                         # Prepare files for API request
+#                         files = {"gate_video": (uploaded_file.name, video_bytes, uploaded_file.type)}
+                        
+#                         # Add face video
+#                         face_video_bytes = uploaded_face_video.getvalue()
+#                         files["face_video"] = (uploaded_face_video.name, face_video_bytes, uploaded_face_video.type)
+                        
+#                         # Send request to API
+#                         response = requests.post(
+#                             f"{API_URL}/api/process-gate-video",
+#                             files=files,
+#                             headers=headers
+#                         )
+                        
+#                         response_json = response.json()
+                        
+#                         if response.status_code == 200:
+#                             # Display all plates found
+#                             st.write("### License Plates Detected")
+#                             all_plates = response_json.get("all_plates", [])
+#                             if all_plates:
+#                                 st.write("The following license plates were detected in the video:")
+#                                 for plate in all_plates:
+#                                     st.write(f"- {plate}")
+#                             else:
+#                                 st.warning("No license plates were detected in the video.")
+                            
+#                             # Create columns for showing recognition results
+#                             col1, col2 = st.columns(2)
+                            
+#                             # Display license plate recognition results
+#                             with col1:
+#                                 st.write("### License Plate Recognition")
+#                                 plate_match = response_json.get("plate_match", False)
+#                                 confidence = response_json.get("confidence", 0)
+                                
+#                                 if plate_match:
+#                                     st.success(f"✅ License plate matched with confidence: {confidence * 100:.1f}%")
+#                                 else:
+#                                     st.warning("❌ No matching license plate found in the database.")
+                            
+#                             # Display face recognition results
+#                             with col2:
+#                                 st.write("### Face Recognition")
+#                                 face_match = response_json.get("face_match", False)
+#                                 face_confidence = response_json.get("face_confidence", 0)
+                                
+#                                 if face_match:
+#                                     st.success(f"✅ Face matched with confidence: {face_confidence * 100:.1f}%")
+#                                 else:
+#                                     st.warning("❌ No matching face found in the database.")
+                            
+#                             # Display access result (requires both plate and face match)
+#                             st.write("### Access Decision")
+#                             if response_json.get("access_granted"):
+#                                 st.success("✅ ACCESS GRANTED")
+#                                 st.write("Both license plate and face were successfully verified.")
+                                
+#                                 details = response_json.get("details", {})
+#                                 if details:
+#                                     with st.expander("View Access Details", expanded=True):
+#                                         st.write("### Vehicle Information")
+#                                         vehicle_info = details.get("vehicle_info", {})
+#                                         st.write(f"**Plate Number:** {vehicle_info.get('plate_number', 'N/A')}")
+#                                         st.write(f"**Model:** {vehicle_info.get('model', 'N/A')}")
+#                                         st.write(f"**Color:** {vehicle_info.get('color', 'N/A')}")
+                                        
+#                                         st.write("### User Information")
+#                                         user_info = details.get("user_info", {})
+#                                         st.write(f"**Name:** {user_info.get('name', 'N/A')}")
+#                                         st.write(f"**Email:** {user_info.get('email', 'N/A')}")
+#                             else:
+#                                 st.error("❌ ACCESS DENIED")
+                                
+#                                 # Explain access denial reason
+#                                 if not response_json.get("plate_match") and not response_json.get("face_match"):
+#                                     st.write("Neither license plate nor face matched records in the database.")
+#                                 elif not response_json.get("plate_match"):
+#                                     st.write("License plate not recognized.")
+#                                 elif not response_json.get("face_match"):
+#                                     st.write("Face not recognized.")
+#                                 else:
+#                                     st.write("Access denied for unknown reason.")
+
+#                             # Log the access attempt
+#                             user_id = response_json.get("user_id")
+#                             vehicle_id = response_json.get("vehicle_id")
+#                             status = "Granted" if response_json.get("access_granted") else "Denied"
+                            
+#                             if user_id is None or vehicle_id is None:
+#                                 st.warning("Missing user or vehicle ID - access attempt not logged")
+#                             else:
+#                                 log_response = requests.post(
+#                                     f"{API_URL}/access/",
+#                                     json={
+#                                         "user_id": user_id,
+#                                         "vehicle_id": vehicle_id,
+#                                         "status": status
+#                                     },
+#                                     headers=headers
+#                                 )
+                                
+#                                 if log_response.status_code != 200:
+#                                     st.warning("Failed to record access attempt in logs")
+                                
+#                         else:
+#                             error_detail = response_json.get("detail", "Unknown error")
+#                             st.error(f"Failed to process video: {error_detail}")
+                    
+#                     except requests.exceptions.RequestException as e:
+#                         st.error(f"Network error: {str(e)}")
+#                     except ValueError as e:
+#                         st.error(f"Invalid response from server: {str(e)}")
+#                     except Exception as e:
+#                         st.error(f"Unexpected error: {str(e)}")
+        
+#         finally:
+#             # Clean up temp files
+#             try:
+#                 if temp_path:
+#                     os.unlink(temp_path)
+#                 if face_temp_path:
+#                     os.unlink(face_temp_path)
+#             except Exception as e:
+#                 st.error(f"Error removing temporary file: {str(e)}")
+
+# /////////////////////////////////////////////////////////////////////////
+
 def process_gate_video():
     st.header("Process Gate Access Video")
     
@@ -531,8 +725,8 @@ def process_gate_video():
     # Upload main gate video
     uploaded_file = st.file_uploader("Upload Gate Video", type=["mp4", "avi", "mov"])
     
-    # Upload face video for recognition
-    uploaded_face_video = st.file_uploader("Upload Face Video (Optional)", type=["mp4", "avi", "mov"])
+    # Upload face video for recognition - make it required
+    uploaded_face_video = st.file_uploader("Upload Face Video (Required)", type=["mp4", "avi", "mov"])
     
     if uploaded_file is not None:
         # Save uploaded video to temp file for display
@@ -545,6 +739,7 @@ def process_gate_video():
             tmp_file.write(video_bytes)
             temp_path = tmp_file.name
         
+        face_temp_path = None
         try:
             # Display the uploaded video
             st.video(temp_path)
@@ -558,16 +753,22 @@ def process_gate_video():
                 st.write("Face Video:")
                 st.video(face_temp_path)
             
-            if st.button("Process Video for Access"):
-                with st.spinner("Processing video... This may take a moment."):
+            process_button = st.button("Process Videos for Access")
+            
+            if process_button:
+                # Check if face video is missing
+                if uploaded_face_video is None:
+                    st.error("Face video is required for access verification")
+                    return
+                    
+                with st.spinner("Processing videos... This may take a moment."):
                     try:
                         # Prepare files for API request
                         files = {"gate_video": (uploaded_file.name, video_bytes, uploaded_file.type)}
                         
-                        # Add face video if provided
-                        if uploaded_face_video is not None:
-                            face_video_bytes = uploaded_face_video.getvalue()
-                            files["face_video"] = (uploaded_face_video.name, face_video_bytes, uploaded_face_video.type)
+                        # Add face video
+                        face_video_bytes = uploaded_face_video.getvalue()
+                        files["face_video"] = (uploaded_face_video.name, face_video_bytes, uploaded_face_video.type)
                         
                         # Send request to API
                         response = requests.post(
@@ -589,9 +790,23 @@ def process_gate_video():
                             else:
                                 st.warning("No license plates were detected in the video.")
                             
-                            # Display face recognition results if video was provided
-                            if uploaded_face_video is not None:
-                                st.write("### Face Recognition Results")
+                            # Create columns for showing recognition results
+                            col1, col2 = st.columns(2)
+                            
+                            # Display license plate recognition results
+                            with col1:
+                                st.write("### License Plate Recognition")
+                                plate_match = response_json.get("plate_match", False)
+                                confidence = response_json.get("confidence", 0)
+                                
+                                if plate_match:
+                                    st.success(f"✅ License plate matched with confidence: {confidence * 100:.1f}%")
+                                else:
+                                    st.warning("❌ No matching license plate found in the database.")
+                            
+                            # Display face recognition results
+                            with col2:
+                                st.write("### Face Recognition")
                                 face_match = response_json.get("face_match", False)
                                 face_confidence = response_json.get("face_confidence", 0)
                                 
@@ -600,10 +815,13 @@ def process_gate_video():
                                 else:
                                     st.warning("❌ No matching face found in the database.")
                             
-                            # Display access result (based on license plate)
+                            # Display access result (requires both plate and face match)
+                            st.write("### Access Decision")
                             if response_json.get("access_granted"):
                                 st.success("✅ ACCESS GRANTED")
+                                st.write("Both license plate and face were successfully verified.")
                                 
+                                # Get the user and vehicle details
                                 details = response_json.get("details", {})
                                 if details:
                                     with st.expander("View Access Details", expanded=True):
@@ -617,16 +835,57 @@ def process_gate_video():
                                         user_info = details.get("user_info", {})
                                         st.write(f"**Name:** {user_info.get('name', 'N/A')}")
                                         st.write(f"**Email:** {user_info.get('email', 'N/A')}")
-                                        
-                                        st.write(f"**Confidence:** {response_json.get('confidence', 0)*100:.1f}%")
                             else:
                                 st.error("❌ ACCESS DENIED")
-                                st.write("No matching vehicle found in the database.")
                                 
+                                # Explain access denial reason
+                                if not response_json.get("plate_match") and not response_json.get("face_match"):
+                                    st.write("Neither license plate nor face matched records in the database.")
+                                elif not response_json.get("plate_match"):
+                                    st.write("License plate not recognized.")
+                                elif not response_json.get("face_match"):
+                                    st.write("Face not recognized.")
+                                elif response_json.get("face_mismatch"):
+                                    st.write("Face does not match the vehicle owner.")
+                                else:
+                                    st.write("Access denied for security reasons.")
+
+                            # Log the access attempt
+                            user_id = response_json.get("user_id")
+                            vehicle_id = response_json.get("vehicle_id")
+                            status = "Granted" if response_json.get("access_granted") else "Denied"
+                        
+                        # Only attempt to log if we have both IDs
+                        # Always try to log the access attempt
+                            try:
+                                log_payload = {
+                                    "status": status,  # "Granted" or "Denied"
+                                    "timestamp": datetime.utcnow().isoformat()  # optional: include time if your API uses it
+                                }
+
+                                # Include user_id or vehicle_id if available
+                                if user_id is not None:
+                                    log_payload["user_id"] = user_id
+                                if vehicle_id is not None:
+                                    log_payload["vehicle_id"] = vehicle_id
+
+                                log_response = requests.post(
+                                    f"{API_URL}/access/",
+                                    json=log_payload,
+                                    headers=headers
+                                )
+
+                                if log_response.status_code == 200:
+                                    st.info("✓ Access attempt logged successfully")
+                                else:
+                                    st.warning("⚠️ Failed to record access attempt in logs")
+
+                            except Exception as e:
+                                st.warning(f"⚠️ Error logging access: {str(e)}")
+
                         else:
-                            error_detail = response_json.get("detail", "Unknown error")
-                            st.error(f"Failed to process video: {error_detail}")
-                    
+                            st.info("Access attempt not logged - user and vehicle could not be identified at all")
+                                            
                     except requests.exceptions.RequestException as e:
                         st.error(f"Network error: {str(e)}")
                     except ValueError as e:
@@ -635,13 +894,18 @@ def process_gate_video():
                         st.error(f"Unexpected error: {str(e)}")
         
         finally:
-            # Clean up temp file
+            # Clean up temp files
             try:
-                os.unlink(temp_path)
-                if uploaded_face_video is not None:
+                if temp_path:
+                    os.unlink(temp_path)
+                if face_temp_path:
                     os.unlink(face_temp_path)
             except Exception as e:
                 st.error(f"Error removing temporary file: {str(e)}")
+
+
+
+
 
 def view_access_logs():
     st.header("Access Logs")

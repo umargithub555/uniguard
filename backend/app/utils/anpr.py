@@ -29,7 +29,11 @@ def detect_license_plates(
     if not cap.isOpened():
         raise ValueError(f"Could not open video file: {video_path}")
     
+<<<<<<< HEAD
     # Initialize YOLOv10 Model
+=======
+    # Initialize YOLO Model
+>>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
     model = YOLO(model_path)
     
     # Initialize Paddle OCR
