@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # # import cv2
 # # import numpy as np
 # # import tempfile
@@ -200,26 +198,17 @@
 
 
 
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 # import cv2
 # import numpy as np
 # import tempfile
 # from typing import Optional, Tuple, Dict, Any
 # import os
-<<<<<<< HEAD
-# from sqlalchemy.orm import Session
-# import face_recognition
-# from .anpr import extract_plate_text
-# from .face_processing import encode_face_image, compare_face_embeddings,decode_face_embedding
-# from ..models import  User, AccessLog, UserData
-=======
 # import base64
 # from sqlalchemy.orm import Session
 # import face_recognition
 # from .anpr import detect_license_plates  # Import the new function instead of extract_plate_text
 # from .face_processing import encode_face_image, compare_face_embeddings, decode_face_embedding
 # from ..models import User, AccessLog, UserData
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 # from datetime import datetime
 
 # class VideoProcessor:
@@ -242,11 +231,6 @@
 #             f.write(video_bytes)
 #         return temp_path
     
-<<<<<<< HEAD
-#     def process_frame(self, frame: np.ndarray) -> str:
-#         """Process a single frame to extract plate number"""
-#         return extract_plate_text(frame)
-=======
 #     # def process_frame(self, frame: np.ndarray) -> str:
 #     #     """Process a single frame to extract plate number"""
 #     #     # This will be updated to use our new function
@@ -369,7 +353,6 @@
 #         face_embedding = encode_face_image(frame.tobytes())
         
 #         return plate_number, face_embedding
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
     
 #     def verify_access(self, plate_number: str) -> Tuple[bool, Dict[str, Any]]:
 #         """Verify access by checking plate number against database"""
@@ -407,11 +390,6 @@
         
 #         return result["access_granted"], result
     
-<<<<<<< HEAD
-#     def process_face_image(self, image_bytes: bytes) -> Tuple[bool, float]:
-#         """Process face image and compare with database"""
-#         face_embedding = encode_face_image(image_bytes)
-=======
 #     # def process_face_image(self, image_bytes: bytes) -> Tuple[bool, float]:
 #     #     """Process face image and compare with database"""
 #     #     face_embedding = encode_face_image(image_bytes)
@@ -428,29 +406,11 @@
 
 #     def process_face_embedding(self, face_embedding: Optional[str]) -> Tuple[bool, float]:
 #         """Process face embedding and compare with database"""
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 #         if not face_embedding:
 #             return False, 0.0
         
 #         # Compare with all users in the database
 #         users = self.db.query(UserData).all()
-<<<<<<< HEAD
-#         for user in users:
-#             if user.face_embedding and compare_face_embeddings(user.face_embedding, decode_face_embedding(face_embedding)):
-#                 return True, 0.9  # Confidence score (can be improved)
-        
-#         return False, 0.0
-    
-#     def process_video(self, video_bytes: bytes, image_bytes: Optional[bytes] = None) -> Dict[str, Any]:
-#         """Process video to authenticate vehicle based on license plate and face recognition"""
-#         video_path = self.save_temp_video(video_bytes)
-        
-#         cap = cv2.VideoCapture(video_path)
-#         if not cap.isOpened():
-#             return {"error": "Failed to open video file"}
-        
-#         frames_processed = 0
-=======
 #         best_confidence = 0.0
 #         face_match = False
         
@@ -546,76 +506,15 @@
 #         # Directly use the detect_license_plates function for the whole video
 #         plates = detect_license_plates(video_path)
         
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 #         best_result = {
 #             "access_granted": False,
 #             "confidence": 0,
 #             "details": None,
-<<<<<<< HEAD
-#             "all_plates": set(),  # Track all unique plates found
-=======
 #             "all_plates": set(plates),  # Use all unique plates found
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 #             "face_match": False,
 #             "face_confidence": 0.0
 #         }
         
-<<<<<<< HEAD
-#         # Process face image if provided
-#         if image_bytes is not None:
-#             face_match, face_confidence = self.process_face_image(image_bytes)
-#             best_result["face_match"] = face_match
-#             best_result["face_confidence"] = face_confidence
-        
-#         while cap.isOpened() and frames_processed < 300:  # Limit to 300 frames
-#             ret, frame = cap.read()
-#             if not ret:
-#                 break
-            
-#             frames_processed += 1
-#             if frames_processed % 5 != 0:  # Process every 5th frame
-#                 continue
-            
-#             try:
-#                 # Extract plate
-#                 plate_number = self.process_frame(frame)
-                
-#                 if plate_number:
-#                     # Add to set of found plates
-#                     best_result["all_plates"].add(plate_number)
-                    
-#                     # Verify access based on plate number
-#                     access_granted, details = self.verify_access(plate_number)
-                    
-#                     # Calculate confidence based on plate recognition
-#                     confidence = 0.8 if access_granted else 0.2
-                    
-#                     # Update best result if this is better
-#                     if access_granted and confidence > best_result["confidence"]:
-#                         best_result = {
-#                             "access_granted": True,
-#                             "confidence": confidence,
-#                             "details": details,
-#                             "all_plates": best_result["all_plates"],  # Maintain the set of all plates
-#                             "face_match": best_result["face_match"],
-#                             "face_confidence": best_result["face_confidence"]
-#                         }
-                        
-#                         # Log access
-#                         if details["user_info"]:
-#                             self.log_access(
-#                                 details["vehicle_info"]["id"], 
-#                                 details["user_info"]["id"],
-#                                 "Granted"
-#                             )
-#                         # Do not break here to allow processing more frames for better confidence
-#             except Exception as e:
-#                 print(f"Error processing frame: {str(e)}")
-#                 continue
-        
-#         cap.release()
-        
-=======
 #         # Process face video if provided
 #         if face_video_bytes is not None:
 #             face_match, face_confidence, _ = self.process_face_video(face_video_bytes)
@@ -658,7 +557,6 @@
 #                 print(f"Error processing plate {plate_number}: {str(e)}")
 #                 continue
         
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 #         # Convert set to list for JSON serialization
 #         best_result["all_plates"] = list(best_result["all_plates"])
         
@@ -673,45 +571,20 @@
 #                 )
         
 #         return best_result
-<<<<<<< HEAD
-    
-=======
 
 
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 #     def log_access(self, vehicle_id: int, user_id: int, status: str) -> None:
 #         """Log an access attempt"""
 #         new_log = AccessLog(
 #             user_id=user_id,
-<<<<<<< HEAD
-#             vehicle_id=vehicle_id,
-=======
 #             vehicle_id=vehicle_id,  # This now correctly maps to the renamed field
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 #             entry_time=datetime.utcnow(),
 #             status=status
 #         )
 #         self.db.add(new_log)
 #         self.db.commit()
 
-<<<<<<< HEAD
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
     
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 
 
 import cv2
@@ -722,11 +595,7 @@ import os
 import base64
 from sqlalchemy.orm import Session
 import face_recognition
-<<<<<<< HEAD
-from .anpr import detect_license_plates  # Import the new function instead of extract_plate_text
-=======
 from .anpr import detect_license_plates
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 from .face_processing import encode_face_image, compare_face_embeddings, decode_face_embedding
 from ..models import User, AccessLog, UserData
 from datetime import datetime
@@ -751,43 +620,6 @@ class VideoProcessor:
             f.write(video_bytes)
         return temp_path
     
-<<<<<<< HEAD
-    # def process_frame(self, frame: np.ndarray) -> str:
-    #     """Process a single frame to extract plate number"""
-    #     # This will be updated to use our new function
-    #     # For single frame, we'll need to create a temporary video file
-    #     temp_frame_path = os.path.join(self.temp_dir, "temp_frame.jpg")
-    #     cv2.imwrite(temp_frame_path, frame)
-        
-    #     # We'll process just this frame using our new function
-    #     # Since our detect_license_plates function expects a video,
-    #     # we need to handle this differently
-        
-    #     # For now, just create a one-frame video
-    #     temp_video_path = os.path.join(self.temp_dir, "temp_one_frame.mp4")
-        
-    #     # Create a video writer
-    #     height, width = frame.shape[:2]
-    #     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    #     writer = cv2.VideoWriter(temp_video_path, fourcc, 1, (width, height))
-    #     writer.write(frame)
-    #     writer.release()
-        
-    #     # Now detect plates using our new function
-    #     plates = detect_license_plates(temp_video_path)
-        
-    #     # Return the first plate (highest confidence) or None
-    #     if plates:
-    #         return plates[0]
-        
-    #     return None
-
-
-    def process_face_video(self, face_video_bytes: bytes) -> Tuple[bool, float, Optional[str]]:
-        """Process face video and extract the best face embedding for comparison"""
-        if not face_video_bytes:
-            return False, 0.0, None
-=======
     def process_frame(self, frame: np.ndarray) -> Tuple[str, Optional[str]]:
         """Process a single frame to extract plate number and face embedding"""
         # Extract plate number
@@ -819,7 +651,6 @@ class VideoProcessor:
         """Process face video and extract the best face embedding for comparison"""
         if not face_video_bytes:
             return False, 0.0, None, None
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
             
         # Save face video to temp file
         face_video_path = os.path.join(self.temp_dir, "temp_face_video.mp4")
@@ -829,19 +660,12 @@ class VideoProcessor:
         # Open video
         cap = cv2.VideoCapture(face_video_path)
         if not cap.isOpened():
-<<<<<<< HEAD
-            return False, 0.0, None
-=======
             return False, 0.0, None, None
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         
         best_face_embedding = None
         best_confidence = 0.0
         face_match = False
-<<<<<<< HEAD
-=======
         matched_user_id = None
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         
         # Process frames from the face video
         frames_processed = 0
@@ -869,64 +693,21 @@ class VideoProcessor:
                 face_embedding = base64.b64encode(face_bytes).decode('utf-8')
                 
                 # Compare with database
-<<<<<<< HEAD
-                current_match, current_confidence = self.process_face_embedding(face_embedding)
-=======
                 current_match, current_confidence, current_user_id = self.process_face_embedding(face_embedding)
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
                 
                 # Update best result if better
                 if current_match and current_confidence > best_confidence:
                     best_confidence = current_confidence
                     best_face_embedding = face_embedding
                     face_match = True
-<<<<<<< HEAD
-=======
                     matched_user_id = current_user_id
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
                     
             except Exception as e:
                 print(f"Error processing face frame: {str(e)}")
                 continue
         
         cap.release()
-<<<<<<< HEAD
-        return face_match, best_confidence, best_face_embedding
-
-
-    def process_frame(self, frame: np.ndarray) -> Tuple[str, Optional[str]]:
-        """Process a single frame to extract plate number and face embedding"""
-        # Extract plate number
-        temp_frame_path = os.path.join(self.temp_dir, "temp_frame.jpg")
-        cv2.imwrite(temp_frame_path, frame)
-        
-        # We'll process just this frame using our new function
-        # Since our detect_license_plates function expects a video,
-        # we need to handle this differently
-        
-        # For now, just create a one-frame video
-        temp_video_path = os.path.join(self.temp_dir, "temp_one_frame.mp4")
-        
-        # Create a video writer
-        height, width = frame.shape[:2]
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        writer = cv2.VideoWriter(temp_video_path, fourcc, 1, (width, height))
-        writer.write(frame)
-        writer.release()
-        
-        # Now detect plates using our new function
-        plates = detect_license_plates(temp_video_path)
-        
-        # Return the first plate (highest confidence) or None
-        plate_number = plates[0] if plates else None
-        
-        # Extract face embedding
-        face_embedding = encode_face_image(frame.tobytes())
-        
-        return plate_number, face_embedding
-=======
         return face_match, best_confidence, best_face_embedding, matched_user_id
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
     
     def verify_access(self, plate_number: str) -> Tuple[bool, Dict[str, Any]]:
         """Verify access by checking plate number against database"""
@@ -934,34 +715,21 @@ class VideoProcessor:
             "access_granted": False,
             "vehicle_found": False,
             "vehicle_info": None,
-<<<<<<< HEAD
-            "user_info": None
-        }
-        
-        # Check if vehicle exists
-=======
             "user_info": None,
             "user_id": None,
             "vehicle_id": None
         }
         
         # Check if vehicle exists in UserData table
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         vehicle = self.db.query(UserData).filter(UserData.plate_number == plate_number).first()
         if not vehicle:
             return False, result
         
-<<<<<<< HEAD
-        # If vehicle is found, access is granted
-        result["vehicle_found"] = True
-        result["access_granted"] = True
-=======
         # If vehicle is found, access could be granted (depends on face match too)
         result["vehicle_found"] = True
         result["access_granted"] = True  # This will be combined with face match later
         result["vehicle_id"] = vehicle.id  # Important for logging
         result["user_id"] = vehicle.user_id  # Important for logging
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         
         result["vehicle_info"] = {
             "id": vehicle.id,
@@ -980,42 +748,17 @@ class VideoProcessor:
             }
         
         return result["access_granted"], result
-<<<<<<< HEAD
-    
-    # def process_face_image(self, image_bytes: bytes) -> Tuple[bool, float]:
-    #     """Process face image and compare with database"""
-    #     face_embedding = encode_face_image(image_bytes)
-    #     if not face_embedding:
-    #         return False, 0.0
-        
-    #     # Compare with all users in the database
-    #     users = self.db.query(UserData).all()
-    #     for user in users:
-    #         if user.face_embedding and compare_face_embeddings(user.face_embedding, decode_face_embedding(face_embedding)):
-    #             return True, 0.9  # Confidence score (can be improved)
-        
-    #     return False, 0.0
-
-    def process_face_embedding(self, face_embedding: Optional[str]) -> Tuple[bool, float]:
-        """Process face embedding and compare with database"""
-        if not face_embedding:
-            return False, 0.0
-=======
 
     def process_face_embedding(self, face_embedding: Optional[str]) -> Tuple[bool, float, Optional[int]]:
         """Process face embedding and compare with database - returns match status, confidence, and user_id"""
         if not face_embedding:
             return False, 0.0, None
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         
         # Compare with all users in the database
         users = self.db.query(UserData).all()
         best_confidence = 0.0
         face_match = False
-<<<<<<< HEAD
-=======
         matched_user_id = None
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         
         for user in users:
             if user.face_embedding:
@@ -1023,87 +766,6 @@ class VideoProcessor:
                 is_match = compare_face_embeddings(user.face_embedding, decode_face_embedding(face_embedding))
                 if is_match:
                     face_match = True
-<<<<<<< HEAD
-                    # Calculate a confidence score (this is simplified, you might want to use actual distance metrics)
-                    confidence = 0.9  # Using a fixed value for now, but could be improved
-                    if confidence > best_confidence:
-                        best_confidence = confidence
-        
-        return face_match, best_confidence
-    
-
-    
-    # def process_video(self, video_bytes: bytes, image_bytes: Optional[bytes] = None) -> Dict[str, Any]:
-    #     """Process video to authenticate vehicle based on license plate and face recognition"""
-    #     video_path = self.save_temp_video(video_bytes)
-        
-    #     # Directly use the detect_license_plates function for the whole video
-    #     plates = detect_license_plates(video_path)
-        
-    #     best_result = {
-    #         "access_granted": False,
-    #         "confidence": 0,
-    #         "details": None,
-    #         "all_plates": set(plates),  # Use all unique plates found
-    #         "face_match": False,
-    #         "face_confidence": 0.0
-    #     }
-        
-    #     # Process face image if provided
-    #     if image_bytes is not None:
-    #         face_match, face_confidence = self.process_face_image(image_bytes)
-    #         best_result["face_match"] = face_match
-    #         best_result["face_confidence"] = face_confidence
-        
-    #     # Process each detected plate to find the best match
-    #     for plate_number in plates:
-    #         try:
-    #             # Verify access based on plate number
-    #             access_granted, details = self.verify_access(plate_number)
-                
-    #             # Calculate confidence (simplified for now)
-    #             confidence = 0.8 if access_granted else 0.2
-                
-    #             # Update best result if this is better
-    #             if access_granted and confidence > best_result["confidence"]:
-    #                 best_result = {
-    #                     "access_granted": True,
-    #                     "confidence": confidence,
-    #                     "details": details,
-    #                     "all_plates": best_result["all_plates"],  # Maintain the set of all plates
-    #                     "face_match": best_result["face_match"],
-    #                     "face_confidence": best_result["face_confidence"]
-    #                 }
-                    
-    #                 # Log access
-    #                 if details["user_info"]:
-    #                     self.log_access(
-    #                         details["vehicle_info"]["id"], 
-    #                         details["user_info"]["id"],
-    #                         "Granted"
-    #                     )
-    #         except Exception as e:
-    #             print(f"Error processing plate {plate_number}: {str(e)}")
-    #             continue
-        
-    #     # Convert set to list for JSON serialization
-    #     best_result["all_plates"] = list(best_result["all_plates"])
-        
-    #     # Log denied access if no match found
-    #     if not best_result["access_granted"] and "details" in best_result and best_result["details"]:
-    #         details = best_result["details"]
-    #         if details["vehicle_found"] and details["user_info"]:
-    #             self.log_access(
-    #                 details["vehicle_info"]["id"],
-    #                 details["user_info"]["id"],
-    #                 "Denied"
-    #             )
-        
-    #     return best_result
-
-
-
-=======
                     # Calculate a confidence score
                     confidence = 0.9  # Using a fixed value for now
                     if confidence > best_confidence:
@@ -1112,32 +774,10 @@ class VideoProcessor:
         
         return face_match, best_confidence, matched_user_id
     
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
     def process_video(self, gate_video_bytes: bytes, face_video_bytes: Optional[bytes] = None) -> Dict[str, Any]:
         """Process video to authenticate vehicle based on license plate and face recognition"""
         video_path = self.save_temp_video(gate_video_bytes)
         
-<<<<<<< HEAD
-        # Directly use the detect_license_plates function for the whole video
-        plates = detect_license_plates(video_path)
-        
-        best_result = {
-            "access_granted": False,
-            "confidence": 0,
-            "details": None,
-            "all_plates": set(plates),  # Use all unique plates found
-            "face_match": False,
-            "face_confidence": 0.0
-        }
-        
-        # Process face video if provided
-        if face_video_bytes is not None:
-            face_match, face_confidence, _ = self.process_face_video(face_video_bytes)
-            best_result["face_match"] = face_match
-            best_result["face_confidence"] = face_confidence
-        
-        # Process each detected plate to find the best match
-=======
         # Detect license plates from the video
         plates = detect_license_plates(video_path)
         
@@ -1165,40 +805,11 @@ class VideoProcessor:
         best_plate_match = None
         best_confidence = 0
         
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
         for plate_number in plates:
             try:
                 # Verify access based on plate number
                 access_granted, details = self.verify_access(plate_number)
                 
-<<<<<<< HEAD
-                # Calculate confidence based on plate recognition and face recognition
-                plate_confidence = 0.8 if access_granted else 0.2
-                
-                # Add extra confidence if face is also recognized
-                final_confidence = plate_confidence
-                if best_result["face_match"]:
-                    final_confidence = (plate_confidence + best_result["face_confidence"]) / 2
-                
-                # Update best result if this is better
-                if access_granted and final_confidence > best_result["confidence"]:
-                    best_result = {
-                        "access_granted": True,
-                        "confidence": final_confidence,
-                        "details": details,
-                        "all_plates": best_result["all_plates"],  # Maintain the set of all plates
-                        "face_match": best_result["face_match"],
-                        "face_confidence": best_result["face_confidence"]
-                    }
-                    
-                    # Log access
-                    if details["user_info"]:
-                        self.log_access(
-                            details["vehicle_info"]["id"], 
-                            details["user_info"]["id"],
-                            "Granted"
-                        )
-=======
                 if access_granted:
                     # Calculate confidence based on plate recognition
                     plate_confidence = 0.85  # Fixed confidence for now
@@ -1218,28 +829,10 @@ class VideoProcessor:
                         # Store plate info for access log
                         plate_user_id = details["user_id"]
                         plate_vehicle_id = details["vehicle_id"]
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
             except Exception as e:
                 print(f"Error processing plate {plate_number}: {str(e)}")
                 continue
         
-<<<<<<< HEAD
-        # Convert set to list for JSON serialization
-        best_result["all_plates"] = list(best_result["all_plates"])
-        
-        # Log denied access if no match found
-        if not best_result["access_granted"] and "details" in best_result and best_result["details"]:
-            details = best_result["details"]
-            if details["vehicle_found"] and details["user_info"]:
-                self.log_access(
-                    details["vehicle_info"]["id"],
-                    details["user_info"]["id"],
-                    "Denied"
-                )
-        
-        return best_result
-
-=======
         # Final access decision - requires BOTH plate and face match
         result["access_granted"] = result["plate_match"] and result["face_match"]
         
@@ -1262,30 +855,17 @@ class VideoProcessor:
         #     )
         
         return result
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 
     def log_access(self, vehicle_id: int, user_id: int, status: str) -> None:
         """Log an access attempt"""
         new_log = AccessLog(
             user_id=user_id,
-<<<<<<< HEAD
-            vehicle_id=vehicle_id,  # This now correctly maps to the renamed field
-=======
             vehicle_id=vehicle_id,
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
             entry_time=datetime.utcnow(),
             status=status
         )
         self.db.add(new_log)
         self.db.commit()
 
-<<<<<<< HEAD
-    
-
-
-
-
-=======
->>>>>>> 9d5ba82d98f1c663ea9ad1fb235f1d31d64cbbcd
 
 
